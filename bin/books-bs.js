@@ -2,7 +2,7 @@
 // -*- javascript -*-
 var moment = require('moment');
 var _ = require('lodash');
-var books = require('../books')
+var books = require('..')
 var fs = require('fs')
 
 var prog = books.prog()  // loads defaults
