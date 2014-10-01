@@ -10,6 +10,7 @@ var prog = require('..').prog()  // loads defaults
   .option('-e, --end-date <date>', 'The date for which to report the P&L [today]')
   .option('-y, --year <year>', 'The year for which to report the P&L ['+now.year()+']')
   .option('-m, --method <method>', 'The accounting method to use [cash]', 'cash')
+  .option('--invert', 'Invert the signs of account totals (i.e., make income positive)')
   .parse(process.argv);
 
 console.log(prog.ledgerFile);
@@ -48,7 +49,7 @@ args.push(['^Income','^Expenses','^Currency'])
 if ( prog.method == 'cash' ) 
   args.push(['--effective'])
 
-args.push('--invert')
+if ( args.invert ) args.push('--invert')
 
 args.push(prog.args)
 
