@@ -25,12 +25,12 @@ if ( prog.year ) {
 } else if ( !prog.beginDate && !prog.endDate ) {
   var year = now.year()
   prog.beginDate = moment(year+"-01-01").format("YYYY-MM-DD")
-  prog.endDate = moment((year+1)+"-01-01").format("YYYY-MM-DD")
+  prog.endDate = moment().format("YYYY-MM-DD")
 } 
 
-// default beginDate to start of current year and endDate to end of current year
+// default beginDate to start of current year and endDate to today
 if ( !prog.beginDate ) prog.beginDate = moment((now.year())+"-01-01").format("YYYY-MM-DD")
-if ( !prog.endDate )   prog.endDate = moment((now.year()+1)+"-01-01").format("YYYY-MM-DD")
+if ( !prog.endDate )   prog.endDate = moment().format("YYYY-MM-DD")
 
 if ( moment(prog.beginDate) > moment(prog.endDate) ) {
   throw new Error("Begin date "+prog.beginDate+" is after end date "+prog.endDate)

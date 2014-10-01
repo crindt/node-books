@@ -27,6 +27,18 @@ if ( prog.method == 'cash' )
 
 args.push(prog.args)
 
+// make sure we generate retained earnings for the correct start point
+if ( !prog.beginDate ) {
+  // if begin date isn't specified, use the beginning of the year relative to
+  // the end date
+  prog.beginDate = [moment(prog.endDate).year(),'01','01'].join("-");
+
+  // exception: if endDate is the first day of the year, use the beginning of
+  // the previous year
+  if (moment(prog.beginDate) == moment(prog.endDate))
+    prog.beginDate = moment(prog.endDate).add(-1,'year').format("YYYY-MM-DD")
+}
+
 
 // read main ledger file
 var lfs = fs.readFileSync(prog.ledgerFile).toString();
@@ -36,7 +48,7 @@ prog.retainedEarnings(
   ( !prog.partners
     ? "profit:retained-earnings"
     : _.map(prog.partners.split(":"), function(m) { return "profit:retained-earnings:"+m })), 
-  moment(prog.endDate).add(-1,'year').format("YYYY-MM-DD"), 
+  moment(prog.beginDate).format("YYYY-MM-DD"), 
   [lfs],
   function(re1) {
     var tfn1 = '/tmp/'+process.pid+'A.ledger'
