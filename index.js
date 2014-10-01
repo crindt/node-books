@@ -113,15 +113,15 @@ var retainedEarnings = function(eqacct, e, incl, cb) {
             var a = [p1,p2,p3,accounting.formatMoney(camt, p5+" ", 2, "", "."),p9].join("");
             var tarr = eqacct.slice()
             var acs =[
-              a1.replace(/Opening\s+Balances/, tarr.shift()),  // first partner gets the rounding error
+              a1.replace(/Equity:Opening\s+Balances/, tarr.shift()),  // first partner gets the rounding error
               _.map(tarr, function(ac) {                      // remaining partners get the basic splits
-                return a.replace(/Opening\s+Balances/, ac);
+                return a.replace(/Equity:Opening\s+Balances/, ac);
               })
             ]
             return _.flatten(acs).join("\n")
           } else {
             var a = [p1,p2,p3,accounting.formatMoney(-(accounting.unformat(p4)+0), p5+" ", 2, "", "."),p9].join("");
-            return a.replace(/Opening\s+Balances/, eqacct);
+            return a.replace(/Equity:Opening\s+Balances/, eqacct);
           }
         })
         .replace(/^(.*Income:.*$)/g,"$1\n    ; IncomeTaxImplication: Balancing-Transaction\n    ; IncomeType: NA\n    ; Explanation: Balancing Transaction")

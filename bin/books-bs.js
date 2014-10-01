@@ -10,6 +10,7 @@ var prog = books.prog()  // loads defaults
   .option('-e, --end-date [date]', 'The date for which to report the balance sheet [today]',moment().add(1,'day').format('YYYY-MM-DD'))
   .option('-m, --method [method]', 'The accounting method to use [cash]', 'cash')
   .option('-p, --partners [partners]', 'A comma separated list of partners for distributing earnings in the report')
+  .option('--equity [account]', 'Name of the top-level equity account to use [Equity]', 'Equity')
   .parse(process.argv);
 
 var lcommand=process.env.LEDGER || 'ledger'
@@ -46,8 +47,8 @@ var lfs = fs.readFileSync(prog.ledgerFile).toString();
 // first retained earnings call computes (prior) retained earnings
 prog.retainedEarnings( 
   ( !prog.partners
-    ? "profit:retained-earnings"
-    : _.map(prog.partners.split(":"), function(m) { return "profit:retained-earnings:"+m })), 
+    ? prog.equity+":profit:retained-earnings"
+    : _.map(prog.partners.split(","), function(m) { return prog.equity+":profit:retained-earnings:"+m })), 
   moment(prog.beginDate).format("YYYY-MM-DD"), 
   [lfs],
   function(re1) {
@@ -58,49 +59,52 @@ prog.retainedEarnings(
 
     prog.retainedEarnings( 
       ( !prog.partners
-        ? "profit:net-income"
-        : _.map(prog.partners.split(":"), function(m) { return "profit:net-income:"+m })), 
+        ? prog.equity+":profit:net-income"
+        : _.map(prog.partners.split(","), function(m) { return prog.equity+":profit:net-income:"+m })), 
       moment(prog.endDate).add(0,'day').format("YYYY-MM-DD"), [ll1], function(re) {
-          // second retained earnings call computes "net income"
+        // second retained earnings call computes "net income"
 
-      // re is a string containing a balancing retained-earnings journal entry
+        // re is a string containing a balancing retained-earnings journal entry
 
-      var title = [
-        "Balance Sheet for "+prog.company,
-        "as of "+(prog.endDate.match(/today/)?moment():moment(prog.endDate)).format("YYYY-MM-DD")
-      ].join("\n")
+        var title = [
+          "Balance Sheet for "+prog.company,
+          "as of "+(prog.endDate.match(/today/)?moment():moment(prog.endDate)).format("YYYY-MM-DD")
+        ].join("\n")
 
-      // Now we're going to create a temporary top-level ledger that includes the
-      // balancing entry
+        // Now we're going to create a temporary top-level ledger that includes the
+        // balancing entry
 
-      // append the balancing entry.  
-      //var ll=lfs+"\n\n"+re
+        // append the balancing entry.  
+        //var ll=lfs+"\n\n"+re
 
-      // for some reason, ledger crashes unless the balancing entry is placed in a
-      // separate temp file that we include.  So we comment the above append and
-      // dump the balancing retained earnings entry to a file and include that file
-      // in our modified ledger
-      var tfn = '/tmp/'+process.pid+'B.ledger'
-      fs.writeFileSync(tfn,re)
-      var ll = [ll1,'!include '+tfn+"\n\n"].join("\n\n")
-      if ( prog.verbose ) console.log(ll)
+        // for some reason, ledger crashes unless the balancing entry is placed in a
+        // separate temp file that we include.  So we comment the above append and
+        // dump the balancing retained earnings entry to a file and include that file
+        // in our modified ledger
+        var tfn = '/tmp/'+process.pid+'B.ledger'
+        fs.writeFileSync(tfn,re)
+        var ll = [ll1,'!include '+tfn+"\n\n"].join("\n\n")
+        if ( prog.verbose ) console.log(ll)
 
-      // exec the child to accept data on stdin
-      if ( prog.verbose) console.log('original file',prog.ledgerFile)
-      args.push(['-f','/dev/stdin'])
-      if ( prog.beginDate) args.push(['-b',prog.beginDate])
-      args.push(['-e',moment(prog.endDate).add(1,'day').format("YYYY-MM-DD")])
+        // exec the child to accept data on stdin
+        if ( prog.verbose) console.log('original file',prog.ledgerFile)
+        args.push(['-f','/dev/stdin'])
 
-      // include any extra command line args coming after --
-      args.push(prog.args)
+        // DON'T USE beginDate on the final balance sheet report
+        //if ( prog.beginDate) args.push(['-b',prog.beginDate])
 
-      // fork the ledger call waiting on stdin
-      var child = prog.exec(args,title)
+        args.push(['-e',moment(prog.endDate).add(1,'day').format("YYYY-MM-DD")])
 
-      // write the top-level (modified) ledger to stdin, which will execute the
-      // forked ledger call and dump the balance sheet with proper Retained-Earnings
-      // for the endDate
-      child.stdin.write(ll)
-      child.stdin.end()
-    })
+        // include any extra command line args coming after --
+        args.push(prog.args)
+
+        // fork the ledger call waiting on stdin
+        var child = prog.exec(args,title)
+
+        // write the top-level (modified) ledger to stdin, which will execute the
+        // forked ledger call and dump the balance sheet with proper Retained-Earnings
+        // for the endDate
+        child.stdin.write(ll)
+        child.stdin.end()
+      })
   })
