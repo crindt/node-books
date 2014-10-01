@@ -9,6 +9,7 @@ var prog = books.prog()  // loads defaults
   .option('-b, --begin-date [date]', 'start date')
   .option('-e, --end-date [date]', 'The date for which to report the balance sheet [today]',moment().add(1,'day').format('YYYY-MM-DD'))
   .option('-m, --method [method]', 'The accounting method to use [cash]', 'cash')
+  .option('-p, --partners [partners]', 'A comma separated list of partners for distributing earnings in the report')
   .parse(process.argv);
 
 var lcommand=process.env.LEDGER || 'ledger'
@@ -32,7 +33,10 @@ var lfs = fs.readFileSync(prog.ledgerFile).toString();
 
 // first retained earnings call computes (prior) retained earnings
 prog.retainedEarnings( 
-  "profit:retained-earnings", moment(prog.endDate).add(-1,'year').format("YYYY-MM-DD"), 
+  ( !prog.partners
+    ? "profit:retained-earnings"
+    : _.map(prog.partners.split(":"), function(m) { return "profit:retained-earnings:"+m })), 
+  moment(prog.endDate).add(-1,'year').format("YYYY-MM-DD"), 
   [lfs],
   function(re1) {
     var tfn1 = '/tmp/'+process.pid+'A.ledger'
@@ -40,8 +44,12 @@ prog.retainedEarnings(
     var ll1=lfs+"\n\n!include "+tfn1+"\n"
     if ( prog.verbose ) console.log(ll1)
 
-    prog.retainedEarnings( "profit:net-income", moment(prog.endDate).add(0,'day').format("YYYY-MM-DD"), [ll1], function(re) {
-      // second retained earnings call computes "net income"
+    prog.retainedEarnings( 
+      ( !prog.partners
+        ? "profit:net-income"
+        : _.map(prog.partners.split(":"), function(m) { return "profit:net-income:"+m })), 
+      moment(prog.endDate).add(0,'day').format("YYYY-MM-DD"), [ll1], function(re) {
+          // second retained earnings call computes "net income"
 
       // re is a string containing a balancing retained-earnings journal entry
 

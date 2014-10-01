@@ -45,6 +45,10 @@ var exec = function( args, title ) {
 }
 
 
+Math.sign = function(v) {
+  if ( v === 0 ) return 1;
+  else return v/Math.abs(v)
+}
 
 
 /**
@@ -96,8 +100,29 @@ var retainedEarnings = function(eqacct, e, incl, cb) {
       return s
         .replace(/^(.*?)\s+Opening Balances\s*$/, [e," Closing Entry"].join(""))
         .replace(/^(\s{4})(.*?)(\s{2,}|\t)(([^\s]*?)(\s*)(-?)([\d,\.]+)(.*))$/, function(m,p1,p2,p3,p4,p5,p6,p7,p8,p9) {
-          var a = [p1,p2,p3,accounting.formatMoney(-(accounting.unformat(p4)+0), p5+" ", 2, "", "."),p9].join("");
-          return a.replace(/Opening\s+Balances/, eqacct);
+          if ( Array.isArray(eqacct) && p2.match(/Opening\s+Balances/)) {
+            // split retaining earnings to partner subaccounts
+            var amt = -(accounting.unformat(p4)+0);
+
+            // splitting may cause rounding errors, recapture...
+            var damt = amt/eqacct.length
+            var camt = Math.sign(damt)*Math.floor(100*Math.abs(damt))/100
+            var roundingerr = Math.round((amt-camt*eqacct.length)*100)/100
+
+            var a1 = [p1,p2,p3,accounting.formatMoney(camt+roundingerr, p5+" ", 2, "", "."),p9].join("");
+            var a = [p1,p2,p3,accounting.formatMoney(camt, p5+" ", 2, "", "."),p9].join("");
+            var tarr = eqacct.slice()
+            var acs =[
+              a1.replace(/Opening\s+Balances/, tarr.shift()),  // first partner gets the rounding error
+              _.map(tarr, function(ac) {                      // remaining partners get the basic splits
+                return a.replace(/Opening\s+Balances/, ac);
+              })
+            ]
+            return _.flatten(acs).join("\n")
+          } else {
+            var a = [p1,p2,p3,accounting.formatMoney(-(accounting.unformat(p4)+0), p5+" ", 2, "", "."),p9].join("");
+            return a.replace(/Opening\s+Balances/, eqacct);
+          }
         })
         .replace(/^(.*Income:.*$)/g,"$1\n    ; IncomeTaxImplication: Balancing-Transaction\n    ; IncomeType: NA\n    ; Explanation: Balancing Transaction")
     }).join("\n")
