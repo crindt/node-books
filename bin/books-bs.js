@@ -21,12 +21,15 @@ var args = []
 args.push('bal')
 args.push(['-X',prog.commodity])
 if ( prog.pedantic ) args.push(['--pedantic'])
-args.push(['^Assets', '^Liabilities', '^Equity'])
-
-if ( prog.method == 'cash' ) 
-  args.push(['--effective'])
 
 args.push(prog.args)
+
+if ( prog.method == 'cash' ) {
+  args.push(['^Assets', '^Liabilities', '^Equity'])
+  args.push(['--effective'])
+} else {
+  args.push(['^Assets', '^Liabilities', '^Equity'])
+}
 
 // make sure we generate retained earnings for the correct start point
 if ( !prog.beginDate ) {

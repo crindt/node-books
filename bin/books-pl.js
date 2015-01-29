@@ -49,7 +49,7 @@ args.push(['^Income','^Expenses','^Currency'])
 if ( prog.method == 'cash' ) 
   args.push(['--effective'])
 
-if ( args.invert ) args.push('--invert')
+if ( prog.invert ) args.push('--invert')
 
 args.push(prog.args)
 

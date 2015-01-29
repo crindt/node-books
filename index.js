@@ -124,7 +124,7 @@ var retainedEarnings = function(eqacct, e, incl, cb) {
             return a.replace(/Equity:Opening\s+Balances/, eqacct);
           }
         })
-        .replace(/^(.*Income:.*$)/g,"$1\n    ; IncomeTaxImplication: Balancing-Transaction\n    ; IncomeType: NA\n    ; Explanation: Balancing Transaction")
+        .replace(/^(.*Closing Entry.*$)/g,"$1\n    ; LEGACY: Hack-for-tag-assertions")
     }).join("\n")
 
     if ( err ) {
