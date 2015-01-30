@@ -1,3 +1,5 @@
+// -*- js-indent-level: 2 -*-
+
 var fs = require('fs')
 var _ = require('lodash')
 var accounting = require('accounting')
@@ -47,12 +49,26 @@ var lines = data.toString().split("\n")
 
 var line 
 var shifted = []
+var company = ""
+var from = ""
+var to = ""
+var lastline = ""
 while ( (line = lines.shift()) !== undefined ) {
   //console.log(_.map(p,function(v,k) { console.log(k,v.name) }).join("\n"))
 
   var m;
   //console.log(line)
-  if ( m = line.match(/(\s*)(\$\s-?[\d,\.]+)(\s\s)(\s*)([^\s].*)/) ) {
+  if ( lastline.match(/^-----/) && ( m = line.match(/(\s*)(\$\s-?[\d,\.]+)/) ) ) {
+    net = accounting.unformat(m[2])
+    console.log("NET IS", net)
+
+  } else if ( m = line.match(/^balance sheet for\s+(.*?)\s*$/i ) ) {
+    company = m[1]
+
+  } else if ( m = line.match(/^\s*as\sof\s(.*?)\s*$/i) ) {
+    to = m[1]
+
+  } else if ( m = line.match(/(\s*)(\$\s-?[\d,\.]+)(\s\s)(\s*)([^\s].*)/) ) {
     var baseidt = m[4].length
 
     // clear old shifted at levels above this one
@@ -106,37 +122,52 @@ function tablerow(c1,c2,w1,w2) {
 
 var idts = 2;//'&nbsp;&nbsp;&nbsp;&nbsp;'
 
-function acct(a,idt,p) {
+var cursym = ""; //"\\$ "
+var curfmt = function(amt) {
+  return accounting.formatMoney(amt, cursym, 2, ",", ".");
+}
+
+
+function acct(a,idt,p,last) {
   if ( !idt ) idt = 0
   var n = a.name;
   var lines = []
   if ( p ) n = [p,n].join(":")
   // break out sub accounts if there are children or if it's a required top-level account
-  if ( a.children.length > 1 || n.match(/^(Liabilities|Equity|Assets)/) ) {
+  if ( a.children.length >= 1 || n.match(/^(Liabilities|Equity|Assets)/) ) {
     //tablerow([idt,n].join(""),"",20,10)
-    lines.push({idt:idt,n:n,v:""})
-    _.each(a.children, function( ch ) { lines.push(acct(ch, idt+idts)) });
+    lines.push({idt:idt,n:n,q:0,v:""})
+    _.each(a.children, function( ch, i ) { 
+      lines.push(acct(ch, idt+idts, null, i == a.children.length-1)) 
+    });
 
-    if ( Math.abs(a.bal()) > 0.005 )  // parent account has balance, report as "Other"
-      //tablerow([idt+"  ",n+" - Other"].join(""),a.bal()+idts,20,10)
-      lines.push({idt:idt+idts,n:n+" - Other",v:accounting.formatMoney(a.bal(), "\\$ ", 2, ",", ".")})
+    if ( Math.abs(a.bal()) > 0.005 ) { // parent account has balance, report as "Other"
+      
+      process.stderr.write(["ACCOUNT",
+			    a.name,
+			    "HAS OTHER VALUE",
+			    a.bal(),
+			    a._bal,
+			    _.map(a.children,function(c) { return c.name + "[" + c._bal + "]"; }).join(":"),
+			    "\n"].join(" "))
+      lines.push({idt:idt+idts,n:"[other]",bar:true,q:a.bal(),v:curfmt(a.bal())})
+    }
 
-    //tablerow([idt,"Total ",n].join(''),accounting.formatMoney(a.total(), "\\$ ", 2, ",", ".")+idt,20,10)
-    lines.push({idt:idt,n:"Total "+n,v:accounting.formatMoney(a.total(), "\\$ ", 2, ",", ".")})
-  } else if ( a.children.length == 1 ) {
+    lines[lines.length-1].bar=true
+
+    lines.push({idt:idt,n:"Total "+n,bar:last,q:a.total(),v:curfmt(a.total())})
+
+  } else if ( a.children.length == 1 ) { // NOT USED IF WE EXPAND ALL ACCOUNTS (>= on previous conditional)
     if ( Math.abs(a.bal()) > 0.005 ) {   // parent account has balance, report as "Other"
-      lines.push({idt:idt,n:n,v:""})     // report parent account (without amount, we'll total this below
+      lines.push({idt:idt,n:n,q:0,v:""})     // report parent account (without amount, we'll total this below
       lines.push(acct(a.children[0],idt+idts,n))  // note that the lone child must be indented further
-      //tablerow([idt+"  ",n+" - Other"].join(""),a.bal(),20,10)
-      lines.push({idt:idt+idts,n:n+" - Other",v:accounting.formatMoney(a.bal(), "\\$ ", 2, ",", ".")})
-      //tablerow([idt,"Total ",n].join(''),accounting.formatMoney(a.total(), "$ ", 2, ",", ".")+idt,20,10)
-      lines.push({idt:idt,n:"Total "+n,v:accounting.formatMoney(a.total(), "\\$ ", 2, ",", ".")})
+      lines.push({idt:idt+idts,n:"[other]",bar:true,q:a.bal(),v:curfmt(a.bal())})
+      lines.push({idt:idt,n:"Total "+n,bar:last,q:a.total(),v:curfmt(a.total())})
     } else {
-      lines.push(acct(a.children[0],idt,n))
+      lines.push(acct(a.children[0],idt,n,true))
     }
   } else {
-    //tablerow([idt,n].join(""),accounting.formatMoney(a.bal(),"$ ",2, ",", ".")+idt,20,10)
-    lines.push({idt:idt,n:n,v:accounting.formatMoney(a.bal(),"\\$ ",2, ",", ".")})
+    lines.push({idt:idt,n:n,q:a.bal(),v:curfmt(a.bal())})
   }
   return _.flatten(lines)
 }
@@ -144,20 +175,8 @@ function acct(a,idt,p) {
 // make sure core accounts exist
 _.each(['Liabilities', 'Assets', 'Equity'], function(a) {
   if ( !accts[a] ) accts[a] = new Account(a);
-});
 
-//acct(accts['root'],'')
-/*
-console.log("|",sprintf("%"+20+"s",""),"|",sprintf("%-10s",""),"|") // head
-console.log("|:-------------------|---------:|") // head
-console.log('| ASSETS             |          |')
-acct(accts['Assets'],idts)
-console.log('| TOTAL ASSETS       |',accounting.formatMoney(accts['Assets'].total(),"$ ",2, ",", "."),'|')
-console.log('| LIABILITIES AND EQUITY |      |')
-acct(accts['Liabilities'],idts)
-acct(accts['Equity'],idts)
-console.log('| TOTAL LIABILITIES AND EQUITY |',accounting.formatMoney(accts['Liabilities'].total()+accts['Equity'].total(),"$ ",2, ",", "."),"|")
-*/
+});
 
 var doT=require('dot')
 
@@ -171,17 +190,29 @@ ety = accts['Equity']
 
 //console.log(acct(ast).lines)
 
+var astlines = acct(ast)
+astlines[astlines.length-1].bar=true
+var lialines = acct(lia)
+lialines[lialines.length-1].bar=true
+var etylines = acct(ety)
+etylines[etylines.length-1].bar=true
+
 console.log(templ({accounting:accounting,
-                   assets: {lines:acct(ast),
+		   from:from,
+		   to:to,
+		   company:company,
+		   curfmt: curfmt,
+		   idts: idts,
+                   assets: {lines:astlines,
                             act: ast,
-                            tot:accounting.formatMoney(ast.total(),"\\$ ",2, ",", ".")
+                            tot:curfmt(ast.total())
                            },
-                   liab:   {lines:acct(lia),
+                   liab:   {lines:lialines,
                             act: lia,
-                            tot:accounting.formatMoney(lia.total(),"\\$ ",2, ",", ".")
+                            tot:curfmt(lia.total())
                            },
-                   eqty:   {lines:acct(ety),
+                   eqty:   {lines:etylines,
                             act: ety,
-                            tot:accounting.formatMoney(ety.total(),"\\$ ",2, ",", ".")
+                            tot:curfmt(ety.total())
                            }
                   }))

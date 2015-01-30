@@ -1,3 +1,5 @@
+// -*- js-indent-level: 2 -*-
+
 var fs = require('fs')
 var _ = require('lodash')
 var accounting = require('accounting')
@@ -50,13 +52,18 @@ var shifted = []
 var company = ""
 var from = ""
 var to = ""
+var lastline = ""
 while ( (line = lines.shift()) !== undefined ) {
   //console.log(_.map(p,function(v,k) { console.log(k,v.name) }).join("\n"))
 
   var m;
   //console.log(line)
 
-  if ( m = line.match(/^profit and loss state?ment for\s+(.*?)\s*$/i ) ) {
+  if ( lastline.match(/^-----/) && ( m = line.match(/(\s*)(\$\s-?[\d,\.]+)/) ) ) {
+    net = accounting.unformat(m[2])
+    console.log("NET IS", net)
+
+  } else if ( m = line.match(/^profit and loss state?ment for\s+(.*?)\s*$/i ) ) {
     company = m[1]
 
   } else if ( m = line.match(/^\s*(.*)\sto\s(.*?)\s*$/i) ) {
@@ -110,6 +117,7 @@ while ( (line = lines.shift()) !== undefined ) {
       //console.log("Pushed",pstr(a),a.name,tidt-2)
     });
   }
+  lastline = line
 }
 function tablerow(c1,c2,w1,w2) {
   console.log("|",sprintf("%"+w1+"s",c1),"|",sprintf("<tt>%-"+w2+"s</tt>",c2),"|")
@@ -117,37 +125,45 @@ function tablerow(c1,c2,w1,w2) {
 
 var idts = 2;//'&nbsp;&nbsp;&nbsp;&nbsp;'
 
-function acct(a,idt,p) {
+var cursym = ""; //"\\$ "
+var curfmt = function(amt) {
+  return accounting.formatMoney(amt, cursym, 2, ",", ".");
+}
+
+function acct(a,idt,p,last) {
   if ( !idt ) idt = 0
   var n = a.name;
   var lines = []
   if ( p ) n = [p,n].join(":")
   // break out sub accounts if there are children or if it's a required top-level account
-  if ( a.children.length > 1 || n.match(/^(Income|Expense)/) ) {
+  if ( a.children.length >= 1 || n.match(/^(Income|Expense)/) ) {
     //tablerow([idt,n].join(""),"",20,10)
     lines.push({idt:idt,n:n,q:0,v:""})
-    _.each(a.children, function( ch ) { lines.push(acct(ch, idt+idts)) });
+    _.each(a.children, function( ch, i ) { 
+      lines.push(acct(ch, idt+idts, null, i == a.children.length-1)) 
+    });
 
     if ( Math.abs(a.bal()) > 0.005 )  // parent account has balance, report as "Other"
       //tablerow([idt+"  ",n+":[Other]"].join(""),a.bal()+idts,20,10)
-      lines.push({idt:idt+idts,n:n+":[Other]",q:a.bal(),v:accounting.formatMoney(a.bal(), "\\$ ", 2, ",", ".")})
+      lines.push({idt:idt+idts,n:"[other]",q:a.bal(),bar:true,v:curfmt(a.bal())})
 
-    //tablerow([idt,"Total ",n].join(''),accounting.formatMoney(a.total(), "\\$ ", 2, ",", ".")+idt,20,10)
-    lines.push({idt:idt,n:"Total "+n,q:a.total(),v:accounting.formatMoney(a.total(), "\\$ ", 2, ",", ".")})
-  } else if ( a.children.length == 1 ) {
+    lines[lines.length-1].bar=true
+
+    //tablerow([idt,"Total ",n].join(''),accounting.formatMoney(a.total(), cursym, 2, ",", ".")+idt,20,10)
+    lines.push({idt:idt,n:"Total "+n,bar:last,q:a.total(),v:curfmt(a.total())})
+
+  } else if ( a.children.length == 1 ) { // NOT USED IF WE EXPAND ALL ACCOUNTS (>= on previous conditional)
     if ( Math.abs(a.bal()) > 0.005 ) {   // parent account has balance, report as "Other"
       lines.push({idt:idt,n:n,q:0,v:""})     // report parent account (without amount, we'll total this below
       lines.push(acct(a.children[0],idt+idts,n))  // note that the lone child must be indented further
-      //tablerow([idt+"  ",n+":[Other]"].join(""),a.bal(),20,10)
-      lines.push({idt:idt+idts,n:n+":[Other]",q:a.bal(),v:accounting.formatMoney(a.bal(), "\\$ ", 2, ",", ".")})
-      //tablerow([idt,"Total ",n].join(''),accounting.formatMoney(a.total(), "$ ", 2, ",", ".")+idt,20,10)
-      lines.push({idt:idt,n:"Total "+n,q:a.total(),v:accounting.formatMoney(a.total(), "\\$ ", 2, ",", ".")})
+      lines.push({idt:idt+idts,n:"[other]",bar:true,q:a.bal(),v:curfmt(a.bal())})
+      lines.push({idt:idt,n:"Total "+n,bar:last,q:a.total(),v:curfmt(a.total())})
     } else {
-      lines.push(acct(a.children[0],idt,n))
+      lines.push(acct(a.children[0],idt,n,true))
     }
   } else {
     //tablerow([idt,n].join(""),accounting.formatMoney(a.bal(),"$ ",2, ",", ".")+idt,20,10)
-    lines.push({idt:idt,n:n,q:a.bal(),v:accounting.formatMoney(a.bal(),"\\$ ",2, ",", ".")})
+    lines.push({idt:idt,n:n,q:a.bal(),v:curfmt(a.bal())})
   }
   return _.flatten(lines)
 }
@@ -156,18 +172,6 @@ function acct(a,idt,p) {
 _.each(['Liabilities', 'Assets', 'Equity'], function(a) {
   if ( !accts[a] ) accts[a] = new Account(a);
 });
-
-//acct(accts['root'],'')
-/*
-console.log("|",sprintf("%"+20+"s",""),"|",sprintf("%-10s",""),"|") // head
-console.log("|:-------------------|---------:|") // head
-console.log('| INCOME             |          |')
-acct(accts['Income'],idts)
-console.log('| TOTAL INCOME       |',accounting.formatMoney(accts['Income'].total(),"$ ",2, ",", "."),'|')
-console.log('| EXPENSES |      |')
-acct(accts['Expenses'],idts)
-console.log('| TOTAL EXPENSES |',accounting.formatMoney(accts['Expenses'].total(),"$ ",2, ",", "."),"|")
-*/
 
 var doT=require('dot')
 
@@ -178,23 +182,25 @@ var templ=doT.template(fs.readFileSync('pl.templ').toString())
 inc = accts['Income']
 exp = accts['Expenses']
 
-//console.log(inc)
-//console.log(JSON.stringify(acct(inc),null,'  '))
-console.log(from)
-console.log(to)
-console.log(company)
+var inclines = acct(inc)
+inclines[inclines.length-1].bar=true
+var explines = acct(exp)
+explines[explines.length-1].bar=true
 
 
 console.log(templ({accounting:accounting,
 		   from:from,
 		   to:to,
 		   company:company,
-                   inc: {lines:acct(inc),
-                            act: inc,
-                            tot:accounting.formatMoney(inc.total(),"\\$ ",2, ",", ".")
-                           },
-                   exp:   {lines:acct(exp),
-                            act: exp,
-                            tot:accounting.formatMoney(exp.total(),"\\$ ",2, ",", ".")
-                           },
+		   net:net,
+		   curfmt: curfmt,
+		   idts: idts,
+                   inc: {lines:inclines,
+                         act: inc,
+                         tot:curfmt(inc.total())
+                        },
+                   exp:   {lines:explines,
+                           act: exp,
+                           tot:curfmt(exp.total())
+                          },
                   }))
