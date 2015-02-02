@@ -20,6 +20,7 @@ console.log(prog.ledgerFile);
 var args = []
 args.push('bal')
 args.push(['-X',prog.commodity])
+args.push(['-E']) // must include empty entries
 if ( prog.pedantic ) args.push(['--pedantic'])
 
 args.push(prog.args)
@@ -97,6 +98,7 @@ prog.retainedEarnings(
         //if ( prog.beginDate) args.push(['-b',prog.beginDate])
 
         args.push(['-e',moment(prog.endDate).add(1,'day').format("YYYY-MM-DD")])
+	args.push(['-E']) // must include empty entries
 
         // include any extra command line args coming after --
         args.push(prog.args)

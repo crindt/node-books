@@ -63,6 +63,7 @@ var retainedEarnings = function(eqacct, e, incl, cb) {
   args.push('equity')
   args.push(['-f', '/dev/stdin'])
   args.push(['-e', e])
+  args.push(['-E'])
   args.push(['^Income','^Expenses'])
   if ( pp.method == 'cash' ) args.push(['--effective'])
   args.push(pp.args)  // add any supplementation CL args passed after --

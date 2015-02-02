@@ -15,8 +15,12 @@ function Account(aname) {
   }
 
   self.bal = function() { return this._bal - this._chtot() }
-  self._chtot = function() { return _.reduce( this.children, function( sum, ch ) { return sum + ch.total() }, 0 )},
+  self._chtot = function() { return _.reduce( this.children, function( sum, ch ) { return sum + ch._bal }, 0 )}
   self.total = function() { return this._bal }
+  self.allZero = function() { return this._bal==0 && _.reduce( this.children, function( az, ch ) { 
+    return az && ch.allZero() 
+  }, true )}
+
 
   return self;
 }
@@ -29,8 +33,11 @@ var accts = {
     idt: -2,
     _bal: 0,
     bal: function() { return this._bal - this._chtot() },
-    _chtot: function() { return _.reduce( this.children, function( sum, ch ) { return sum + ch.total() }, 0 )},
-    total: function() { return this._bal }
+    _chtot: function() { return _.reduce( this.children, function( sum, ch ) { return sum + ch._bal }, 0 )},
+    total: function() { return this._bal },
+    allZero: function() { return this._bal==0 && _.reduce( this.children, function( az, ch ) { 
+      return az && ch.allZero() 
+    }, true )}
   }
 }
 
@@ -68,7 +75,7 @@ while ( (line = lines.shift()) !== undefined ) {
   } else if ( m = line.match(/^\s*as\sof\s(.*?)\s*$/i) ) {
     to = m[1]
 
-  } else if ( m = line.match(/(\s*)(\$\s-?[\d,\.]+)(\s\s)(\s*)([^\s].*)/) ) {
+  } else if ( m = line.match(/(\s*)(\$?\s-?[\d,\.]+)(\s\s)(\s*)([^\s].*)/) ) {
     var baseidt = m[4].length
 
     // clear old shifted at levels above this one
@@ -80,20 +87,20 @@ while ( (line = lines.shift()) !== undefined ) {
 
 
     var adjbaseidt = baseidt+_.reduce(shifted.slice(0,baseidt), function(sum,ll) { return sum+(ll?ll:0)}, 0)
-    //console.log('idts',m[5],baseidt,adjbaseidt)
+    console.log('idts',m[5],baseidt,adjbaseidt)
 
     // loop over nested accounts reported on a single line
     var tidt = adjbaseidt
     _.each(m[5].split(/:/), function(a) {
-      //console.log('>>>>>',a,'tidt',tidt,'lastidt',lastidt)
+      console.log('>>>>>',a,'tidt',tidt,'lastidt',lastidt)
       if ( tidt > lastidt ) {
-        //console.log("Updating parent idt",tidt)
+        console.log("Updating parent idt",tidt)
         p[tidt] = last
         lastidt = tidt
       }
       var n = a
       //console.log(JSON.stringify(p))
-      //console.log("account",n,"idt",tidt,"will have parent",p[tidt].name)
+      console.log("account",n,"idt",tidt,"will have parent",p[tidt].name)
       var a = {
         name: n,
         idt: tidt,
@@ -101,18 +108,21 @@ while ( (line = lines.shift()) !== undefined ) {
         parent: p[tidt],
         children: [],
         bal: function() { return this._bal - this._chtot() },
-        _chtot: function() { return _.reduce( this.children, function( sum, ch ) { return sum + ch.total() }, 0 )},
-        total: function() { return this._bal }
+        _chtot: function() { return _.reduce( this.children, function( sum, ch ) { return sum + ch._bal }, 0 )},
+        total: function() { return this._bal },
+	allZero: function() { return this._bal==0 && _.reduce( this.children, function( az, ch ) { 
+	  return az && this._bal==0 && ch.allZero() 
+	}, true )}
 
       }
       accts[a.name] = a
-      //console.log('idt',a.idt,"BALBALBAL",m[1],a._bal)
+      console.log('idt',a.idt,"BALBALBAL",m[1],a._bal)
       a.parent.children.push(a);
       last = a
       lastidt = tidt
       tidt += 2   // drop to next level of ident
       p[tidt] = a
-      //console.log("Pushed",pstr(a),a.name,tidt-2)
+      console.log("Pushed",pstr(a),a.name,tidt-2)
     });
   }
 }
@@ -132,6 +142,13 @@ function acct(a,idt,p,last) {
   if ( !idt ) idt = 0
   var n = a.name;
   var lines = []
+  if ( a.allZero() ) {
+    process.stderr.write(["ACCOUNT IS ALL ZERO",
+			  n,
+			  a._bal,
+			 "\n"].join(" "))
+    return lines;  // this account and all children have exactly zero balance
+  }
   if ( p ) n = [p,n].join(":")
   // break out sub accounts if there are children or if it's a required top-level account
   if ( a.children.length >= 1 || n.match(/^(Liabilities|Equity|Assets)/) ) {

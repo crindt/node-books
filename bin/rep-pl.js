@@ -15,8 +15,11 @@ function Account(aname) {
   }
 
   self.bal = function() { return this._bal - this._chtot() }
-  self._chtot = function() { return _.reduce( this.children, function( sum, ch ) { return sum + ch.total() }, 0 )},
+  self._chtot = function() { return _.reduce( this.children, function( sum, ch ) { return sum + ch._bal }, 0 )}
   self.total = function() { return this._bal }
+  self.allZero = function() { return this._bal==0 && _.reduce( this.children, function( az, ch ) { 
+    return az && ch.allZero() 
+  }, true )}
 
   return self;
 }
@@ -29,8 +32,11 @@ var accts = {
     idt: -2,
     _bal: 0,
     bal: function() { return this._bal - this._chtot() },
-    _chtot: function() { return _.reduce( this.children, function( sum, ch ) { return sum + ch.total() }, 0 )},
-    total: function() { return this._bal }
+    _chtot: function() { return _.reduce( this.children, function( sum, ch ) { return sum + ch._bal }, 0 )},
+    total: function() { return this._bal },
+    allZero: function() { return this._bal==0 && _.reduce( this.children, function( az, ch ) { 
+      return az && ch.allZero() 
+    }, true )}
   }
 }
 
@@ -70,7 +76,7 @@ while ( (line = lines.shift()) !== undefined ) {
     from = m[1]
     to = m[2]
 
-  } else if ( m = line.match(/(\s*)(\$\s-?[\d,\.]+)(\s\s)(\s*)([^\s].*)/) ) {
+  } else if ( m = line.match(/(\s*)(\$?\s-?[\d,\.]+)(\s\s)(\s*)([^\s].*)/) ) {
     var baseidt = m[4].length
 
     // clear old shifted at levels above this one
@@ -103,8 +109,11 @@ while ( (line = lines.shift()) !== undefined ) {
         parent: p[tidt],
         children: [],
         bal: function() { return this._bal - this._chtot() },
-        _chtot: function() { return _.reduce( this.children, function( sum, ch ) { return sum + ch.total() }, 0 )},
-        total: function() { return this._bal }
+        _chtot: function() { return _.reduce( this.children, function( sum, ch ) { return sum + ch._bal }, 0 )},
+        total: function() { return this._bal },
+	allZero: function() { return this._bal==0 && _.reduce( this.children, function( az, ch ) { 
+	  return az && ch.allZero() 
+	}, true )}
 
       }
       accts[a.name] = a
@@ -134,6 +143,7 @@ function acct(a,idt,p,last) {
   if ( !idt ) idt = 0
   var n = a.name;
   var lines = []
+  if ( a.allZero() && false ) return lines;  // this account and all children have exactly zero balance
   if ( p ) n = [p,n].join(":")
   // break out sub accounts if there are children or if it's a required top-level account
   if ( a.children.length >= 1 || n.match(/^(Income|Expense)/) ) {
@@ -143,9 +153,10 @@ function acct(a,idt,p,last) {
       lines.push(acct(ch, idt+idts, null, i == a.children.length-1)) 
     });
 
-    if ( Math.abs(a.bal()) > 0.005 )  // parent account has balance, report as "Other"
+    if ( Math.abs(a.bal()) > 0.005 ) { // parent account has balance, report as "Other"
       //tablerow([idt+"  ",n+":[Other]"].join(""),a.bal()+idts,20,10)
       lines.push({idt:idt+idts,n:"[other]",q:a.bal(),bar:true,v:curfmt(a.bal())})
+    }
 
     lines[lines.length-1].bar=true
 
