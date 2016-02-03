@@ -46,7 +46,7 @@ if ( !prog.beginDate ) {
 
 
 // read main ledger file
-var lfs = fs.readFileSync(prog.ledgerFile).toString();
+var lfs = fs.readFileSync(prog.ledgerFile).toString()
 
 // first retained earnings call computes (prior) retained earnings
 prog.retainedEarnings( 
@@ -109,7 +109,10 @@ prog.retainedEarnings(
         // write the top-level (modified) ledger to stdin, which will execute the
         // forked ledger call and dump the balance sheet with proper Retained-Earnings
         // for the endDate
-        child.stdin.write(ll)
+        child.stdin.write(
+            ll
+                .replace(/(accumulated-depreciation)/ig,"xxx-\$1")
+        )
         child.stdin.end()
       })
   })
