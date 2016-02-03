@@ -50,6 +50,8 @@ while (<>) {
 
     if ( /^$/ ) {
         # print trans
+        print STDERR "PRINTING TRANSACTION ".@trans[1]."\n";
+        print STDERR "        WITH RECEIPT ".@rcpt[0]."\n" if @rcpt;
         if ( @rcpt ) {
             push @trans, join(
                 "\n",
@@ -57,10 +59,21 @@ while (<>) {
                     if ( /<MISSING>/ ) {
                         ""
                     } else {
+                        s/ALT://; # remove ALT: heading
+                        # check for pdf options, like page number
+                        my @p=/^(.*\.(pdf|png|jpg))(\s*\[(.*)\])?.*$/i;
+                        my $f = $p[0];
+                        $f = $_ if ( !$f ); # nomatch on filename in regex above, revert to original
+                        print STDERR "PPPPPP:  ".join(",",@p)."\n";
+                        print STDERR "FIGURE:  ".$f."\n";
+                        my @opts = ("height=2in");
+                        if ( $p[3] ) { push(@opts,$p[3]) };
+                        my $opts = join(",",@opts);
+                        print STDERR "FIGURE OPTS:  ".$opts."\n";
                         join("",
                              "\\bTR[$bgc]\\bTD[nc=2]\\eTD",
                              "\\bTD[nc=2]",
-                             "\\rotate[rotation=90]{\\externalfigure[".$_."][height=2in]}\n",
+                             "\\rotate[rotation=90]{\\framed[background=color,backgroundcolor=white]{\\externalfigure[$f][$opts]}}\n",
                              "\\eTD\\eTR");
                 }
                 } @rcpt
@@ -76,6 +89,7 @@ while (<>) {
         @trans = ();
         $cnt = 0;
         @rcpt = ();
+
     } else {
         if ( !$cnt++ ) {
             # first entry
@@ -120,17 +134,22 @@ EOFbyyear
             }
             $lastmonth = $month;
             $intab = 1;
+
         } elsif ( /^\s+;\s*(.*)/ ) {
+            # read metadata
             my $meta = $1;
             my ($tag,@vala) = split(/\s*:\s*/,$meta);
+            $tag =~ s/^\s*//g;
             my $val = join(":",@vala);
+            print STDERR "TAG:$tag=$val\n";
 
             if ( $tag =~ /^invoice/i ) {
                 # should push
                 push @invc, $val if ( $show_receipts );
                     
             } elsif ( $tag =~ /^receipt/i ) {
-                push @rcpt, $val if ( $show_receipts)
+                push @rcpt, $val if ( $show_receipts);
+                print STDERR "PUSHING RECEIPT:$val\n"
             } elsif ( $tag =~ /^(statement)/i ) {
                 # ignore
             } elsif ( $tag =~ /^(ofxid|fitid|source)/i ) {
@@ -141,8 +160,9 @@ EOFbyyear
                 push @trans, $meta;
                 push @trans, "}}\\eTD\n\\eTR";
             }
+
         } else {
-            # split
+            # read split
             push @trans, "\\bTR[$bgc]\\bTD\\eTD % NEW SPLIT";
             /^\s*(.*?)(\s{2}\s*((-?\s*\$|\$\s*-?)\s*[\d,]+(\.\d+)?|(-?\s*[\d,]+(\.\d+)?\s*[a-zA-Z]+)|\([^\)]+\)|)\s*([\(\{=].*?|\@.*?)?)?(;(.*))?\s*$/ || warn "CAN'T READ IT: $_\n";
             my $acct = $1;
