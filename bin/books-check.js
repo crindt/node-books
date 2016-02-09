@@ -2,7 +2,6 @@
 // -*- javascript -*-
 var moment = require('moment');
 var _ = require('lodash');
-var sys = require('sys')
 var spawn = require('child_process').spawn;
 var cheerio = require('cheerio')
 var fs = require('fs')
@@ -23,7 +22,7 @@ args.push(['-X',prog.commodity])
 args.push(['--real'])  // prevents some ledger errors with virtual transactions
 if ( prog.strict ) args.push(['--strict'])
 
-if ( prog.method == 'cash' ) 
+if ( prog.method == 'cash' )
   args.push(['--effective'])
 
 args.push(prog.args)
@@ -31,7 +30,7 @@ args.push(prog.args)
 if ( prog.verbose ) console.log(lcommand, _.flatten(args).join(' '))
 
 
-var child = spawn(lcommand, _.flatten(args), 
+var child = spawn(lcommand, _.flatten(args),
                   { stdio: ['pipe', 'pipe', 'pipe'] }
                  );
 var xml=""
@@ -91,10 +90,3 @@ child.on('exit', function() {
     });
   });
 });
-
-
-
-
-
-
-

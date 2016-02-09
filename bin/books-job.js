@@ -1,6 +1,5 @@
 #!/usr/bin/env node
 // -*- javascript -*-
-var sys = require('sys')
 var prog = require('commander');
 var spawn = require('child_process').spawn;
 var moment = require('moment');
@@ -22,7 +21,7 @@ if ( prog.args.length < 1 ) throw new Error("Please specify the job(s) to report
 
 args.push([_.map(prog.args,function(j){return '^jobs:'+j;})])
 
-if ( prog.method == 'cash' ) 
+if ( prog.method == 'cash' )
   args.push(['--effective'])
 
 args.push('--invert')
