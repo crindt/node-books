@@ -1,5 +1,4 @@
 var _ = require('lodash')
-var sys = require('sys')
 var spawn = require('child_process').spawn;
 var accounting = require('accounting')
 var fs = require('fs')
@@ -15,7 +14,7 @@ var exec = function( args, title ) {
     console.log(title)
     console.log("")
   }
-  var child = spawn(lcommand, _.flatten(args), 
+  var child = spawn(lcommand, _.flatten(args),
                     { stdio: ['pipe', process.stdout, 'pipe'] }
                    );
 
@@ -72,7 +71,7 @@ var retainedEarnings = function(eqacct, e, incl, cb) {
 
   var err = ""
   var outstr = ""
-  var ch = spawn(lcommand, _.flatten(args), 
+  var ch = spawn(lcommand, _.flatten(args),
                  { stdio: ['pipe', 'pipe', 'pipe'] });
 
 
@@ -158,4 +157,3 @@ module.exports.prog = function(pp) {
 
   return prog
 }
-
