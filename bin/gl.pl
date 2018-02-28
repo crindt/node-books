@@ -72,7 +72,7 @@ while (<>) {
                         join("",
                              "\\bTR[$bgc]\\bTD[nc=2]\\eTD",
                              "\\bTD[nc=2]",
-                             "\\rotate[rotation=90]{\\framed[background=color,backgroundcolor=white]{\\externalfigure[$f][$opts]}}\n",
+                             "\\rotate[rotation=0]{\\framed[background=color,backgroundcolor=white]{\\externalfigure[$f][$opts]}}\n",
                              "\\eTD\\eTR");
                 }
                 } @rcpt
