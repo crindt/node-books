@@ -17,8 +17,8 @@ function Account(aname) {
   self.bal = function() { return this._bal - this._chtot() }
   self._chtot = function() { return _.reduce( this.children, function( sum, ch ) { return sum + ch._bal }, 0 )}
   self.total = function() { return this._bal }
-  self.allZero = function() { return this._bal==0 && _.reduce( this.children, function( az, ch ) { 
-    return az && ch.allZero() 
+  self.allZero = function() { return this._bal==0 && _.reduce( this.children, function( az, ch ) {
+    return az && ch.allZero()
   }, true )}
 
   return self;
@@ -34,8 +34,8 @@ var accts = {
     bal: function() { return this._bal - this._chtot() },
     _chtot: function() { return _.reduce( this.children, function( sum, ch ) { return sum + ch._bal }, 0 )},
     total: function() { return this._bal },
-    allZero: function() { return this._bal==0 && _.reduce( this.children, function( az, ch ) { 
-      return az && ch.allZero() 
+    allZero: function() { return this._bal==0 && _.reduce( this.children, function( az, ch ) {
+      return az && ch.allZero()
     }, true )}
   }
 }
@@ -53,30 +53,28 @@ data = fs.readFileSync('/dev/stdin')
 
 var lines = data.toString().split("\n")
 
-var line 
+var line
 var shifted = []
 var company = ""
 var from = ""
 var to = ""
 var lastline = ""
 while ( (line = lines.shift()) !== undefined ) {
-  //console.log(_.map(p,function(v,k) { console.log(k,v.name) }).join("\n"))
+  _.map(p,function(v,k) { console.log(k,v.name) }).join("\n")
 
   var m;
-  //console.log(line)
-
-  if ( lastline.match(/^-----/) && ( m = line.match(/(\s*)(\$\s-?[\d,\.]+)/) ) ) {
+  if ( /^-----/.test(lastline) && ( m = line.match(/(\s*)(\$\s*-?[\d,\.]+)/) ) ) {
     net = accounting.unformat(m[2])
-    console.log("NET IS", net)
+    //console.log("NET IS", net)
 
-  } else if ( m = line.match(/^profit and loss state?ment for\s+(.*?)\s*$/i ) ) {
+  } else if ( (m = line.match(/^profit and loss state?ment for\s+(.*?)\s*$/i )) ) {
     company = m[1]
 
-  } else if ( m = line.match(/^\s*(.*)\sto\s(.*?)\s*$/i) ) {
+  } else if (( m = line.match(/^\s*(.*)\sto\s(.*?)\s*$/i)) ) {
     from = m[1]
     to = m[2]
 
-  } else if ( m = line.match(/(\s*)(\$?\s-?[\d,\.]+)(\s\s)(\s*)([^\s].*)/) ) {
+  } else if ( (m = line.match(/(\s*)(\$?\s*-?[\d,\.]+)(\s\s)(\s*)([^\s].*)/)) ) {
     var baseidt = m[4].length
 
     // clear old shifted at levels above this one
@@ -111,9 +109,9 @@ while ( (line = lines.shift()) !== undefined ) {
         bal: function() { return this._bal - this._chtot() },
         _chtot: function() { return _.reduce( this.children, function( sum, ch ) { return sum + ch._bal }, 0 )},
         total: function() { return this._bal },
-	allZero: function() { return this._bal==0 && _.reduce( this.children, function( az, ch ) { 
-	  return az && ch.allZero() 
-	}, true )}
+	      allZero: function() { return this._bal==0 && _.reduce( this.children, function( az, ch ) {
+	        return az && ch.allZero()
+	      }, true )}
 
       }
       accts[a.name] = a
@@ -149,8 +147,8 @@ function acct(a,idt,p,last) {
   if ( a.children.length >= 1 || n.match(/^(Income|Expense)/) ) {
     //tablerow([idt,n].join(""),"",20,10)
     lines.push({idt:idt,n:n,q:0,v:""})
-    _.each(a.children, function( ch, i ) { 
-      lines.push(acct(ch, idt+idts, null, i == a.children.length-1)) 
+    _.each(a.children, function( ch, i ) {
+      lines.push(acct(ch, idt+idts, null, i == a.children.length-1))
     });
 
     if ( Math.abs(a.bal()) > 0.005 ) { // parent account has balance, report as "Other"
