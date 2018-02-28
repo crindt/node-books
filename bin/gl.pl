@@ -80,7 +80,8 @@ while (<>) {
         }
         push @trans, "\\bTR[$bgc]\\eTR";  # add blank line at end
         my $tt = join("\n",@trans)."\n";
-        $tt =~ s/([\$\#])/\\$1/g;
+        # escape dollar signs, pounds, and percents
+        $tt =~ s/([\$\#\%])/\\$1/g;
         print "\n$tt\n";
         #print "\n\\starttyping\n$trans\\stoptyping\n";
         #map { print "\\rotate[rotation=90]{\\externalfigure[".$_."][height=2in]}\n" } @rcpt;
