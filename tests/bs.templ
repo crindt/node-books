@@ -1,0 +1,66 @@
+\setuppapersize[letter]
+\setuppagenumbering[location={footer,middle},style=\bfc]
+
+\newdimen\myborderoffset \myborderoffset=0.75in
+\definelayout[mypage][page]
+\setuplayout[mypage][
+	backspace=\myborderoffset,
+	topspace=\myborderoffset
+]
+\setuplayout[mypage]
+
+\startuseMPgraphic{mpos:par:columnset} % Shift underlining down a touch
+  \iftracepositions show_multi_pars \else draw_multi_pars \fi ;
+  path p ; p := boundingbox currentpicture ;
+  currentpicture := currentpicture shifted (0,-50*StrutDepth) ;
+  setbounds currentpicture to p ;
+\stopuseMPgraphic
+\definetextbackground[underline]
+ [location=text,alternative=1,background=,frame=off]
+\definestartstop
+ [underline]
+ [before={\starttextbackground[underline]},
+  after=\stoptextbackground]
+
+\definebar[barunderline][color=black,rulethickness=.1,order=background,offset=-.25,continue=yes]
+\definebar[barnounderline][color=white,rulethickness=.1,order=background,offset=-.25,continue=yes]
+\definebar[secondul][color=black,rulethickness=.4,order=background,offset=-.55,continue=yes]
+
+\starttext\ss
+\setupalign[middle]
+{\bf
+\tfa {{=it.company}}\\
+\tfb Balance Sheet\\
+\tfa as of {{=it.to}}
+\\{\tfxx\bf Cash Basis}
+\vskip1em
+}
+\tfxx\setupinterlinespace[line=1.5ex]
+\setupTABLE[frame=off,width=\textwidth]
+\setupTABLE[row][each][width=0.8\textwidth]
+\definecolor[mygray][h=EFEFEF]
+\setupTABLE[row][odd][background=color,backgroundcolor=mygray]
+\setupTABLE[c][1][align=right,width=0.6\textwidth]
+\setupTABLE[c][2][width=2em]
+\setupTABLE[c][3][align=left,width=0.35\textwidth]
+  
+\bTABLE[split=yes]
+\bTR\bTD[nc=3]\bf ASSETS\eTD
+{{~it.assets.lines :value:index}}
+{{ var bar = (index==it.assets.lines.length-1) || it.assets.lines[index+1].idt < value.idt; }}
+\bTR\bTD\hskip {{=(it.idts+value.idt)}}em \bf {{=value.n}}\eTD\bTD\eTD\bTD{{? bar }} \barunderline{ {{??}} \barnounderline{ {{?}} \tt{{? value.q <0}}\color[black]{{{?}} {{=value.v}} {{? value.q<0}}}{{?}}}\framed[frame=off,width={{=it.idts+value.idt}}em]{}\eTD\eTR
+{{~}}
+\bTR\bTD \bf TOTAL ASSETS\eTD\bTD\eTD\bTD{\tt\secondul{ {{? it.assets.tot < 0 }} \color[black]{ {{?}} {{=it.assets.tot}} {{? it.assets.tot <0}} } {{?}} }}\eTD\eTR
+\bTR\bTD[nc=3]~~\eTD\eTR
+\bTR\bTD[nc=3]\bf LIABILITIES AND EQUITY\eTD
+{{~it.liab.lines :value:index}}
+{{ var bar = (index==it.liab.lines.length-1) || it.liab.lines[index+1].idt < value.idt; }}
+\bTR\bTD\hskip {{=(it.idts+value.idt)}}em \bf {{=value.n}}\eTD\bTD\eTD\bTD{{? bar}} \barunderline{ {{??}} \barnounderline{  {{?}} \tt{{? value.q <0}}\color[black]{{{?}} {{=value.v}} {{? value.q<0}}}{{?}}}\framed[frame=off,width={{=it.idts+value.idt}}em]{}\eTD\eTR
+{{~}}
+{{~it.eqty.lines :value:index}}
+{{ var bar = (index==it.eqty.lines.length-1) || it.eqty.lines[index+1].idt < value.idt; }}
+\bTR\bTD\hskip {{=(it.idts+value.idt)}}em \bf {{=value.n}}\eTD\bTD\eTD\bTD{{? bar}} \barunderline{ {{??}} \barnounderline{  {{?}} \tt{{? value.q <0}}\color[black]{{{?}} {{=value.v}} {{? value.q<0}}}{{?}}}\framed[frame=off,width={{=it.idts+value.idt}}em]{}\eTD\eTR
+{{~}}
+\bTR\bTD \bf TOTAL LIABILITIES AND EQUITY\eTD\bTD\eTD\bTD{\tt\secondul{\bf {{? it.eqty.act.total()+it.liab.act.total() <0}}\color[black]{ {{?}} {{= it.curfmt(it.eqty.act.total()+it.liab.act.total())}} {{? it.net < 0 }}}{{?}} }}\eTD\eTR
+\eTABLE
+\stoptext
