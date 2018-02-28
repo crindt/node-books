@@ -76,7 +76,7 @@ while ( (line = lines.shift()) !== undefined ) {
 
   var m;
   //console.log(line)
-  if ( lastline.match(/^-----/) && ( m = line.match(/(\s*)(\$\s-?[\d,\.]+)/) ) ) {
+  if ( lastline.match(/^-----/) && ( m = line.match(/(\s*)(\$\s*-?[\d,\.]+)/) ) ) {
     net = accounting.unformat(m[2])
     //console.log("NET IS", net)
 
@@ -86,7 +86,7 @@ while ( (line = lines.shift()) !== undefined ) {
   } else if ( m = line.match(/^\s*as\sof\s(.*?)\s*$/i) ) {
     to = m[1]
 
-  } else if ( m = line.match(/(\s*)(\$?\s-?[\d,\.]+)(\s\s)(\s*)([^\s].*)/) ) {
+  } else if ( m = line.match(/(\s*)(\$?\s*-?[\d,\.]+)(\s\s)(\s*)([^\s].*)/) ) {
     var baseidt = m[4].length
 
     // clear old shifted at levels above this one
