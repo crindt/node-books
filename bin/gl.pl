@@ -126,7 +126,6 @@ EOFet
 EOF4
             } elsif ( !$intab ) {
                 print <<EOFbyyear;
-% count is $cnt
 \\bTABLE[split=repeat]
 \\bTABLEhead\\bTR[background=color,backgroundcolor=black]\\bTH[nc=3]\\color[white]{Description} \\eTH\\bTH \\color[white]{Debit}\\eTH\\bTH \\color[white]{Credit}\\eTH\\eTR\\eTABLEhead
 \\bTABLEbody
@@ -163,7 +162,7 @@ EOFbyyear
 
         } else {
             # read split
-            push @trans, "\\bTR[$bgc]\\bTD\\eTD % NEW SPLIT";
+            push @trans, "\\bTR[$bgc]\\bTD\\eTD "; ##% NEW SPLIT";
             /^\s*(.*?)(\s{2}\s*((-?\s*\$|\$\s*-?)\s*[\d,]+(\.\d+)?|(-?\s*[\d,]+(\.\d+)?\s*[a-zA-Z]+)|\([^\)]+\)|)\s*([\(\{=].*?|\@.*?)?)?(;(.*))?\s*$/ || warn "CAN'T READ IT: $_\n";
             my $acct = $1;
             my $dol = "\$";
