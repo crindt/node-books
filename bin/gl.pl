@@ -34,8 +34,7 @@ print <<EOF;
 \\setupTABLE[c][3][width=0.6\\textwidth]
 \\setupTABLE[c][4][width=0.1\\textwidth,align=left]
 \\setupTABLE[c][5][width=0.1\\textwidth,align=left]
-\\setupcolor[x11]
-\\setupcolor[hex]
+\\usecolors[xwi]
 \\definecolor[darky][h=787878]
 EOF
 
@@ -55,7 +54,7 @@ while (<>) {
         if ( @rcpt ) {
             push @trans, join(
                 "\n",
-                map { 
+                map {
                     if ( /<MISSING>/ ) {
                         ""
                     } else {
@@ -146,7 +145,7 @@ EOFbyyear
             if ( $tag =~ /^invoice/i ) {
                 # should push
                 push @invc, $val if ( $show_receipts );
-                    
+
             } elsif ( $tag =~ /^receipt/i ) {
                 push @rcpt, $val if ( $show_receipts);
                 print STDERR "PUSHING RECEIPT:$val\n"
