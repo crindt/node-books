@@ -1,0 +1,13 @@
+2017/01/19 (TMOBILE*AUTO PAY - 800-937-8997, WA) TMOBILE*AUTO PAY - 800-937-8997, WA Communications 01/19/2017  Thu
+    ; Receipt: ALT:statements/amex-blue/2017/Statement_Feb-2017.pdf[page=3]
+    ; Statement: statements/amex-blue/2017/Statement_Feb-2017.pdf
+    Liabilities:Credit-Cards:AMEX-Blue                       $ -85.37
+    Expenses:Utilities:Mobile-Phone
+
+
+2017/12/30 AMEX EPAYMENT ACH PMT 180102 A4654
+    ; ExpenseTaxImplication: Bank-Transfer
+    ; Statement: statements/comerica/2018-01-comerica.pdf
+    Assets:Current:Comerica:Checking      $ -154.75
+    Liabilities:Credit-Cards:AMEX-Blue
+    ; Statement: statements/amex-blue/2018/Statement_Jan-2018.pdf

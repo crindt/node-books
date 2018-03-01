@@ -1,0 +1,29 @@
+2017/10/24 (THE UPS STORE - COSTA MESA, CA) THE UPS STORE - COSTA MESA, CA Other 10/24/2017  Tue
+    ; ExpenseTaxImplication: USA-Corporation
+    ; Receipt: receipts/2017/2017-10-24:ups-copies-notary.jpg
+    ; Statement: statements/amex-blue/2017/Statement_Nov-2017.pdf
+    ; Explanation: printing copies of proposals; notarize signatures
+    Liabilities:Credit-Cards:AMEX-Blue                       $ -67.50 ; LA planning proposal
+    Expenses:Office:Copies
+
+2017/10/24 (FEDEX OFFICE - SANTA ANA, CA) FEDEX OFFICE - SANTA ANA, CA Business Services 10/24/2017  Tue
+    ; ExpenseTaxImplication: USA-Corporation
+    ; Receipt: <MISSING>
+    ; Statement: statements/amex-blue/2017/Statement_Nov-2017.pdf
+    ; Explanation: binding proposals with ring binding
+    Liabilities:Credit-Cards:AMEX-Blue      $ -45.18
+    Liabilities:Credit-Cards:AMEX-Blue      $  2.26 ; 5% credit from fedex
+    Expenses:Office:Copies
+
+2017/10/24 (JOES AUTO PARKS 253 MAIN ST - LOS ANGELES, CA) JOES AUTO PARKS 253 MAIN ST - LOS ANGELES, CA Transportation 10/24/2017  Tue
+    ; ExpenseTaxImplication: USA-Corporation
+    ; Receipt: receipts/2017/2017-10-24:joes-auto-park.jpg
+    ; Statement: statements/amex-blue/2017/Statement_Nov-2017.pdf
+    ; Explanation: parking to deliver proposals to LA Planning
+    Liabilities:Credit-Cards:AMEX-Blue                       $ -7.00
+    Expenses:Travel-and-Entertainment:Travel
+
+2017/10/31 INTEREST
+    Assets:Current:Comerica:Savings                       $ 0.01
+    Income:Interest
+    ; Statement: statements/comerica/savings/2017-10-comerica-savings.pdf
