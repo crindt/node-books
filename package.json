@@ -3,15 +3,16 @@
   "version": "0.0.1",
   "description": "Wrapper for ledger-cli for generating standard financial reports.",
   "main": "index.js",
-  "bin": { "books": "bin/books.js",
-           "books-bs": "bin/books-bs.js",
-           "books-pl": "bin/books-pl.js",
-           "books-check": "bin/books-check.js",
-           "books-job": "bin/books-job.js",
-           "books-repbs": "bin/rep.js",
-           "books-reppl": "bin/rep-pl.js",
-           "books-gl": "bin/gl.pl"
-         },
+  "bin": {
+    "books": "bin/books.js",
+    "books-bs": "bin/books-bs.js",
+    "books-pl": "bin/books-pl.js",
+    "books-check": "bin/books-check.js",
+    "books-job": "bin/books-job.js",
+    "books-repbs": "bin/rep.js",
+    "books-reppl": "bin/rep-pl.js",
+    "books-gl": "bin/gl.pl"
+  },
   "dependencies": {
     "accounting": "^0.4.1",
     "cheerio": "^0.17.0",

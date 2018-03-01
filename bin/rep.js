@@ -9,10 +9,10 @@ var prog = books.prog()  // loads defaults
   .option('--invert-liab-and-equity', 'Invert the signs of liabilities and equity totals (i.e., make net-income positive)')
   .parse(process.argv);
 
-function ivt(a) { 
+function ivt(a) {
   return ( prog.invertLiabAndEquity && a.fullname().match(/^root:(Liabilities|Equity)/) ? -1 : 1 )
 }
-  
+
 
 function Account(aname) {
   var self = {
@@ -23,13 +23,13 @@ function Account(aname) {
     _bal: 0,
   }
 
-  
+
   self.fullname = function() { return ( this.parent ? this.parent.fullname()+":" : "")+this.name }
   self.bal = function() { return ivt(this) * (this._bal - this._chtot()) }
   self._chtot = function() { return _.reduce( this.children, function( sum, ch ) { return sum + ch._bal }, 0 )}
   self.total = function() { return ivt(this) * (this._bal) }
-  self.allZero = function() { return this._bal==0 && _.reduce( this.children, function( az, ch ) { 
-    return az && ch.allZero() 
+  self.allZero = function() { return this._bal==0 && _.reduce( this.children, function( az, ch ) {
+    return az && ch.allZero()
   }, true )}
 
   return self;
@@ -46,8 +46,8 @@ var accts = {
     bal: function() { return ivt(this) * (this._bal - this._chtot()) },
     _chtot: function() { return _.reduce( this.children, function( sum, ch ) { return sum + ch._bal }, 0 )},
     total: function() { return ivt(this) * this._bal },
-    allZero: function() { return this._bal==0 && _.reduce( this.children, function( az, ch ) { 
-      return az && ch.allZero() 
+    allZero: function() { return this._bal==0 && _.reduce( this.children, function( az, ch ) {
+      return az && ch.allZero()
     }, true )}
   }
 }
@@ -65,7 +65,7 @@ data = fs.readFileSync('/dev/stdin')
 
 var lines = data.toString().split("\n")
 
-var line 
+var line
 var shifted = []
 var company = ""
 var from = ""
@@ -122,8 +122,8 @@ while ( (line = lines.shift()) !== undefined ) {
         bal: function() { return ivt(this) * (this._bal - this._chtot()) },
         _chtot: function() { return _.reduce( this.children, function( sum, ch ) { return sum + ch._bal }, 0 )},
         total: function() { return ivt(this) * this._bal },
-	allZero: function() { return this._bal==0 && _.reduce( this.children, function( az, ch ) { 
-	  return az && ch.allZero() 
+	allZero: function() { return this._bal==0 && _.reduce( this.children, function( az, ch ) {
+	  return az && ch.allZero()
 	}, true )}
 
       }
@@ -161,24 +161,24 @@ function acct(a,idt,p,last) {
     //     		  a._bal,
     //     		 "\n"].join(" "))
     return lines;  // this account and all children have exactly zero balance
-  } 
+  }
   // process.stderr.write(["ACCOUNT IS NOT ALL ZERO",
   //       		n,
   //       		a._bal,
   //       		"\n"].join(" "))
-    
+
   if ( p ) n = [p,n].join(":")
   // break out sub accounts if there are children or if it's a required top-level account
   if ( ( a.children.length >= 1 &&  Math.abs(a._chtot()) > 0.005) || n.match(/^(Liabilities|Equity|Assets)/) ) {
     //tablerow([idt,n].join(""),"",20,10)
     lines.push({idt:idt,n:n,q:0,v:""})
-    _.each(a.children, function( ch, i ) { 
+    _.each(a.children, function( ch, i ) {
       var clines = acct(ch, idt+idts, null, i == a.children.length-1)
       lines.push(clines)
     });
 
     if ( Math.abs(a.bal()) > 0.005 ) { // parent account has balance, report as "Other"
-      
+
       process.stderr.write(["ACCOUNT",
 			    a.name,
 			    "HAS OTHER VALUE",

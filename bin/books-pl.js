@@ -27,7 +27,7 @@ if ( prog.year ) {
   var year = now.year()
   prog.beginDate = moment(year+"-01-01").format("YYYY-MM-DD")
   prog.endDate = moment().format("YYYY-MM-DD")
-} 
+}
 
 // default beginDate to start of current year and endDate to today
 if ( !prog.beginDate ) prog.beginDate = moment((now.year())+"-01-01").format("YYYY-MM-DD")
@@ -46,7 +46,7 @@ args.push(['-e',prog.endDate])
 args.push(['-X',prog.commodity])
 args.push(['^Income','^Expenses','^Currency'])
 
-if ( prog.method == 'cash' ) 
+if ( prog.method == 'cash' )
   args.push(['--effective'])
 
 if ( prog.invert ) args.push('--invert')
