@@ -183,6 +183,42 @@ EOFbyyear
     }
 }
 
+# um, I think there is one transaction left to print?
+print STDERR "PRINTING TRANSACTION ".@trans[1]."\n";
+print STDERR "        WITH RECEIPT ".@rcpt[0]."\n" if @rcpt;
+if ( @rcpt ) {
+    push @trans, join(
+        "\n",
+        map {
+            if ( /<MISSING>/ ) {
+                ""
+            } else {
+                s/ALT://; # remove ALT: heading
+                # check for pdf options, like page number
+                my @p=/^(.*\.(pdf|png|jpg))(\s*\[(.*)\])?.*$/i;
+                my $f = $p[0];
+                $f = $_ if ( !$f ); # nomatch on filename in regex above, revert to original
+                print STDERR "PPPPPP:  ".join(",",@p)."\n";
+                print STDERR "FIGURE:  ".$f."\n";
+                my @opts = ("height=2in");
+                if ( $p[3] ) { push(@opts,$p[3]) };
+                my $opts = join(",",@opts);
+                print STDERR "FIGURE OPTS:  ".$opts."\n";
+                join("",
+                     "\\bTR[$bgc]\\bTD[nc=2]\\eTD",
+                     "\\bTD[nc=2]",
+                     "\\rotate[rotation=0]{\\framed[background=color,backgroundcolor=white]{\\externalfigure[$f][$opts]}}\n",
+                     "\\eTD\\eTR");
+            }
+        } @rcpt
+        );
+}
+push @trans, "\\bTR[$bgc]\\eTR";  # add blank line at end
+my $tt = join("\n",@trans)."\n";
+# escape dollar signs, pounds, and percents
+$tt =~ s/([\$\#\%])/\\$1/g;
+print "\n$tt\n";
+
 print <<EOF3;
 \\eTABLEbody
 \\eTABLE
