@@ -25,12 +25,13 @@ if ( prog.pedantic ) args.push(['--pedantic'])
 
 args.push(prog.args)
 
+args.push(['^Assets', '^Liabilities', '^Equity'])
+args.push(['and','not','Equity:IGNORE','and','not','Equity:Opening Balances'])
 if ( prog.method == 'cash' ) {
-  args.push(['^Assets', '^Liabilities', '^Equity'])
   args.push(['--effective'])
-} else {
-  args.push(['^Assets', '^Liabilities', '^Equity'])
 }
+
+
 
 // make sure we generate retained earnings for the correct start point
 if ( !prog.beginDate ) {
@@ -53,7 +54,7 @@ prog.retainedEarnings(
   ( !prog.partners
     ? prog.equity+":profit:retained-earnings"
     : _.map(prog.partners.split(","), function(m) { return prog.equity+":profit:retained-earnings:"+m })), 
-  moment(prog.beginDate).format("YYYY-MM-DD"), 
+    moment(prog.beginDate).utc().format("YYYY-MM-DD"), 
   [lfs],
   function(re1) {
     var tfn1 = '/tmp/'+process.pid+'A.ledger'
@@ -65,14 +66,14 @@ prog.retainedEarnings(
       ( !prog.partners
         ? prog.equity+":profit:net-income"
         : _.map(prog.partners.split(","), function(m) { return prog.equity+":profit:net-income:"+m })), 
-      moment(prog.endDate).add(0,'day').format("YYYY-MM-DD"), [ll1], function(re) {
+        moment(prog.endDate).add(0,'day').utc().format("YYYY-MM-DD"), [ll1], function(re) {
         // second retained earnings call computes "net income"
 
         // re is a string containing a balancing retained-earnings journal entry
 
         var title = [
           "Balance Sheet for "+prog.company,
-          "as of "+(prog.endDate.match(/today/)?moment():moment(prog.endDate)).format("YYYY-MM-DD")
+            "as of "+(prog.endDate.match(/today/)?moment():moment(prog.endDate)).add(-1,'day').utc().format("YYYY-MM-DD")
         ].join("\n")
 
         // Now we're going to create a temporary top-level ledger that includes the
@@ -97,7 +98,7 @@ prog.retainedEarnings(
         // DON'T USE beginDate on the final balance sheet report
         //if ( prog.beginDate) args.push(['-b',prog.beginDate])
 
-        args.push(['-e',moment(prog.endDate).add(1,'day').format("YYYY-MM-DD")])
+            args.push(['-e',moment(prog.endDate).format("YYYY-MM-DD")])
 	args.push(['-E']) // must include empty entries
 
         // include any extra command line args coming after --

@@ -4,6 +4,11 @@ var fs = require('fs')
 var _ = require('lodash')
 var accounting = require('accounting')
 var sprintf = require('sprintf-js').sprintf
+var books = require('..')
+var prog = books.prog()  // loads defaults
+    .option('--templ <file>', 'Location of template', 'pl.templ')
+    .parse(process.argv);
+
 
 function Account(aname) {
   var self = {
@@ -60,7 +65,7 @@ var from = ""
 var to = ""
 var lastline = ""
 while ( (line = lines.shift()) !== undefined ) {
-  _.map(p,function(v,k) { console.log(k,v.name) }).join("\n")
+  //_.map(p,function(v,k) { console.log(k,v.name) }).join("\n")
 
   var m;
   if ( /^-----/.test(lastline) && ( m = line.match(/(\s*)(\$\s*-?[\d,\.]+)/) ) ) {
@@ -186,7 +191,7 @@ var doT=require('dot')
 
 doT.templateSettings.strip=false
 
-var templ=doT.template(fs.readFileSync('pl.templ').toString())
+var templ=doT.template(fs.readFileSync(prog.templ).toString())
 
 inc = accts['Income']
 exp = accts['Expenses']

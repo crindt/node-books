@@ -16,12 +16,13 @@
   "dependencies": {
     "accounting": "^0.4.1",
     "cheerio": "^0.17.0",
-    "dot": "^1.0.2",
     "colors": "^0.6.2",
     "commander": "^2.3.0",
+    "dot": "^1.0.2",
+    "lodash": "^2.4.1",
     "moment": "^2.8.3",
-    "sprintf-js": "^0.0.7",
-    "lodash": "^2.4.1"
+    "moment-timezone": "^0.5.34",
+    "sprintf-js": "^0.0.7"
   },
   "devDependencies": {},
   "scripts": {

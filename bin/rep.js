@@ -7,7 +7,10 @@ var sprintf = require('sprintf-js').sprintf
 var books = require('..')
 var prog = books.prog()  // loads defaults
   .option('--invert-liab-and-equity', 'Invert the signs of liabilities and equity totals (i.e., make net-income positive)')
+  .option('--templ <file>', 'Location of template', 'bs.templ')
   .parse(process.argv);
+
+
 
 function ivt(a) {
   return ( prog.invertLiabAndEquity && a.fullname().match(/^root:(Liabilities|Equity)/) ? -1 : 1 )
@@ -218,7 +221,7 @@ var doT=require('dot')
 
 doT.templateSettings.strip=false
 
-var templ=doT.template(fs.readFileSync('bs.templ').toString())
+var templ=doT.template(fs.readFileSync(prog.templ).toString())
 
 ast = accts['Assets']
 lia = accts['Liabilities']
